@@ -241,13 +241,19 @@ function renderProgram(id) {
       </div>
       <div class="ph-right"><button class="btn btn-primary" onclick="openEdit('${id}')">Upload Workbook</button></div>
     </div>
-    <div class="empty-state">
+    <div class="empty-state" style="margin-bottom:0">
       <div class="empty-state-icon">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
       </div>
       <h3>No Workbook Uploaded</h3>
-      <p>Upload an Excel workbook to load financial data, or start entering program status below.</p>
+      <p>Upload an Excel workbook to load financial data. All other sections below are available now.</p>
       <button class="btn btn-primary" onclick="openEdit('${id}')">Upload Workbook</button>
+    </div>
+    <div class="section">
+      <div class="section-header"><span class="section-num">01</span><span class="section-title">Program Health — Stoplights</span><div class="section-rule"></div>
+        <div class="section-actions"><span style="font-size:11px;color:var(--dim);font-style:italic">Click light to cycle · Double-click card for detail</span></div>
+      </div>
+      <div class="sl-grid">${STOPLIGHT_CATS.map(cat => renderSlCard(id, cat.key)).join('')}</div>
     </div>
     ${renderProgramTabs(id, null)}`;
 
