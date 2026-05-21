@@ -29,8 +29,8 @@ function render() {
     bc.innerHTML   = `<a onclick="go('portfolio')">Portfolio</a><span class="bc-sep">/</span><span class="bc-active">${p.meta.name}</span>`;
     if (st) st.textContent = p.meta.contract || p.meta.name;
     main.innerHTML = renderProgram(S.pid);
-    // ── Key fix: wire tabs AFTER innerHTML is set ──
-    wireTabs();
+    // Wire tabs after DOM has fully painted
+    requestAnimationFrame(() => wireTabs());
   }
   else if (S.view === 'to') {
     const p = S.programs[S.pid];
@@ -45,16 +45,20 @@ function render() {
 function wireTabs() {
   const nav = document.getElementById('prog-tab-nav');
   if (!nav) return;
+  // Remove any existing listeners by cloning
   nav.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      // Deactivate all
+    // Use onclick attribute so it survives re-renders
+    btn.onclick = function() {
       nav.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-      // Activate clicked
-      btn.classList.add('active');
-      const pane = document.getElementById('tp-' + btn.dataset.tab);
-      if (pane) pane.classList.add('active');
-    });
+      this.classList.add('active');
+      const pane = document.getElementById('tp-' + this.dataset.tab);
+      if (pane) {
+        pane.classList.add('active');
+      } else {
+        console.warn('Tab pane not found: tp-' + this.dataset.tab);
+      }
+    };
   });
 }
 
