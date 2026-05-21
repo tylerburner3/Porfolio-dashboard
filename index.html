@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Program Financial Dashboard</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* ── Program page component styles ── */
+.fin-bluff{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.bluff-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);padding:14px 16px;position:relative;overflow:hidden;box-shadow:var(--sh-sm)}
+.bluff-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--bc,var(--blue))}
+.bluff-label{font-family:var(--f-display);font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:7px}
+.bluff-value{font-family:var(--f-mono);font-size:22px;font-weight:500;color:var(--bc,var(--navy));line-height:1}
+.bluff-sub{font-family:var(--f-mono);font-size:10px;color:var(--dim);margin-top:4px}
+.bluff-card.at-risk{--bc:var(--red);border-color:rgba(192,40,46,.3);background:var(--red-bg)}
+.bluff-card.watch{--bc:var(--amber);border-color:rgba(184,92,0,.25);background:var(--amber-bg)}
+.bluff-card.ok{--bc:var(--green)}
+.dso-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.dso-item{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);padding:10px 12px;text-align:center}
+.dso-lbl{font-family:var(--f-display);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:5px}
+.dso-val{font-family:var(--f-mono);font-size:20px;font-weight:500;color:var(--navy)}
+.sl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:10px}
+.sl-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);padding:12px 14px;position:relative;overflow:hidden;box-shadow:var(--sh-sm);transition:box-shadow .15s,transform .15s}
+.sl-card:hover{box-shadow:var(--sh-md);transform:translateY(-1px)}
+.sl-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:4px;background:var(--slc,var(--dim2));border-radius:var(--r2) 0 0 var(--r2)}
+.sl-card.sl-green{--slc:var(--green)}.sl-card.sl-amber{--slc:var(--amber)}.sl-card.sl-red{--slc:var(--red)}.sl-card.sl-gray{--slc:var(--dim2)}
+.sl-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.sl-name{font-family:var(--f-display);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tx2)}
+.sl-light{width:14px;height:14px;border-radius:50%;background:var(--slc,var(--dim2));box-shadow:0 0 0 2px white,0 0 0 3px var(--slc,var(--dim2));flex-shrink:0;cursor:pointer;transition:transform .15s}
+.sl-light:hover{transform:scale(1.2)}
+.sl-comment{font-size:11px;color:var(--tx3);line-height:1.4;font-style:italic;min-height:14px;cursor:text}
+.sl-comment[contenteditable="true"]:focus{outline:1px dashed var(--bd2);border-radius:2px;padding:2px 4px;background:var(--s0)}
+.sl-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.sl-drill{font-family:var(--f-mono);font-size:9px;color:var(--blue);opacity:0;transition:opacity .15s;cursor:pointer;user-select:none}
+.sl-card:hover .sl-drill{opacity:1}
+.sl-controls{display:flex;gap:4px}
+.sl-btn{width:18px;height:18px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;transition:transform .1s}
+.sl-btn:hover{transform:scale(1.2)}
+.sl-btn-g{background:var(--green-bg);color:var(--green)}.sl-btn-a{background:var(--amber-bg);color:var(--amber)}.sl-btn-r{background:var(--red-bg);color:var(--red)}
+.rollup-table-wrap{overflow-x:auto}
+table.rollup{border-collapse:collapse;width:100%}
+table.rollup thead th{padding:9px 14px;text-align:left;font-family:var(--f-display);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.85);background:var(--navy);white-space:nowrap;border-right:1px solid rgba(255,255,255,.08)}
+table.rollup thead th.r{text-align:right}
+table.rollup tbody tr{border-bottom:1px solid var(--bd);transition:background .1s}
+table.rollup tbody tr:hover{background:var(--blue-bg)}
+table.rollup tbody td{padding:9px 14px;font-size:13px;border-right:1px solid var(--bd)}
+table.rollup tbody td.r{text-align:right;font-family:var(--f-mono);font-size:12px}
+table.rollup tbody td.dim{color:var(--dim);font-style:italic}
+table.rollup tfoot tr{border-top:2px solid var(--navy);background:var(--s2)}
+table.rollup tfoot td{padding:9px 14px;font-family:var(--f-display);font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--navy)}
+table.rollup tfoot td.r{text-align:right;font-family:var(--f-mono);font-size:12px}
+.editable{cursor:text;border-bottom:1px dashed var(--bd2);outline:none}
+.editable:focus{outline:2px solid var(--blue);border-radius:2px;background:var(--blue-bg);padding:1px 3px}
+.comment-box{width:100%;background:var(--s0);border:1.5px solid var(--bd);border-radius:var(--r);padding:8px 10px;font-family:var(--f-body);font-size:12px;color:var(--tx);resize:vertical;min-height:64px;outline:none;transition:border-color .15s}
+.comment-box:focus{border-color:var(--blue)}
+.review-list{display:flex;flex-direction:column;gap:6px}
+.review-item{display:flex;gap:10px;padding:10px 12px;background:var(--s0);border:1px solid var(--bd);border-radius:var(--r);align-items:flex-start}
+.review-item-num{font-family:var(--f-mono);font-size:11px;color:var(--dim);flex-shrink:0;width:20px;text-align:right;padding-top:2px}
+.review-item-text{flex:1;font-size:13px;color:var(--tx2);outline:none;min-height:18px}
+.review-item-text:focus{background:var(--blue-bg);border-radius:2px;padding:1px 4px}
+.review-item-del{color:var(--dim);cursor:pointer;font-size:18px;opacity:0;transition:opacity .15s;flex-shrink:0;background:none;border:none;padding:0 2px;line-height:1}
+.review-item:hover .review-item-del{opacity:1}
+table.milestone{border-collapse:collapse;width:100%}
+table.milestone th{padding:8px 12px;text-align:left;font-family:var(--f-display);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);background:var(--s2);border-bottom:1px solid var(--bd)}
+table.milestone td{padding:8px 12px;font-size:12px;border-bottom:1px solid var(--bd)}
+.kpi-track-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.kpi-track-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);padding:12px 14px;box-shadow:var(--sh-sm)}
+.kpi-track-name{font-family:var(--f-display);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--navy);margin-bottom:8px}
+.kpi-track-vals{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.kpi-track-val{text-align:center}
+.kpi-track-val label{font-family:var(--f-display);font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:2px}
+.kpi-track-val .v{font-family:var(--f-mono);font-size:16px;color:var(--navy)}
+.kpi-track-status{font-size:11px;color:var(--tx3);border-top:1px solid var(--bd);padding-top:7px;min-height:20px}
+.risk-badge{display:inline-block;padding:2px 7px;border-radius:2px;font-family:var(--f-display);font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.risk-high{background:var(--red-bg);color:var(--red)}.risk-med{background:var(--amber-bg);color:var(--amber)}.risk-low{background:var(--green-bg);color:var(--green)}.risk-opp{background:var(--blue-bg);color:var(--blue)}
+.visit-list{display:flex;flex-direction:column;gap:8px}
+.visit-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);padding:12px 16px;box-shadow:var(--sh-sm)}
+.visit-header{display:flex;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:8px;align-items:center}
+.visit-date{font-family:var(--f-mono);font-size:11px;color:var(--blue);font-weight:500}
+.visit-type{font-family:var(--f-display);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.visit-org{font-family:var(--f-display);font-size:12px;font-weight:600;color:var(--navy);margin-bottom:4px}
+.visit-notes{font-size:12px;color:var(--tx3);line-height:1.5}
+.staffing-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px}
+.staff-stat{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);padding:12px 14px;box-shadow:var(--sh-sm)}
+.staff-stat-lbl{font-family:var(--f-display);font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+.staff-stat-val{font-family:var(--f-mono);font-size:22px;font-weight:500;color:var(--navy)}
+.add-row-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:transparent;border:1px dashed var(--bd2);border-radius:var(--r);font-family:var(--f-display);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);cursor:pointer;transition:all .15s;margin-top:8px}
+.add-row-btn:hover{border-color:var(--navy);color:var(--navy);background:var(--blue-bg)}
+.save-dot{width:7px;height:7px;border-radius:50%;background:var(--green);opacity:0;transition:opacity .3s;display:inline-block;margin-left:6px;vertical-align:middle}
+.save-dot.show{opacity:1}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-logo">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <polygon points="8,1 14,4.5 14,11.5 8,15 2,11.5 2,4.5" stroke="white" stroke-width="1.2" fill="none"/>
+          <polygon points="8,4 11.5,6 11.5,10 8,12 4.5,10 4.5,6" fill="white" opacity=".5"/>
+        </svg>
+      </div>
+      <div>
+        <div class="topbar-name">Program Financial Dashboard</div>
+        <div class="topbar-sub">Portfolio Management System</div>
+      </div>
+    </div>
+    <div class="topbar-divider"></div>
+    <div class="topbar-ctx" id="nav-ctx">Portfolio View</div>
+    <div class="topbar-right">
+      <div class="topbar-pill" id="prog-count">0 Programs</div>
+      <div class="topbar-date" id="topbar-date"></div>
+    </div>
+  </header>
+
+  <!-- SUBBAR -->
+  <div class="subbar">
+    <div class="breadcrumb" id="breadcrumb">
+      <a onclick="go('portfolio')" class="bc-active">Portfolio</a>
+    </div>
+    <div class="subbar-right">
+      <span class="subbar-tag" id="subbar-tag">All Programs</span>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <main id="main"></main>
+
+</div>
+
+<!-- ── ADD PROGRAM MODAL ── -->
+<div class="overlay" id="modal-add">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Add Program</span>
+      <button class="modal-close" onclick="closeModal('modal-add')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="margin-bottom:14px">
+        <div class="field"><label>Program Name *</label><input id="ap-name" placeholder="e.g. AFRL Sustainment Support" autocomplete="off"></div>
+        <div class="field"><label>Contract / CP Number</label><input id="ap-contract" placeholder="FA8650-24-C-0001"></div>
+        <div class="field"><label>Customer / Sponsor</label><input id="ap-customer" placeholder="AFRL, Army G-6…"></div>
+        <div class="field"><label>Period of Performance</label><input id="ap-pop" placeholder="Oct 2024 – Sep 2026"></div>
+        <div class="field">
+          <label>Contract Type</label>
+          <select id="ap-cttype">
+            <option value="TM">T&amp;M — Time &amp; Materials</option>
+            <option value="CPFF">CPFF — Cost Plus Fixed Fee</option>
+            <option value="CPAF">CPAF — Cost Plus Award Fee</option>
+            <option value="FFP">FFP — Firm Fixed Price</option>
+            <option value="IDIQ">IDIQ — Indefinite Delivery/Quantity</option>
+            <option value="OTHER" selected>Other / Not Specified</option>
+          </select>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div style="margin:12px 0 8px">
+        <div class="field" style="margin-bottom:8px">
+          <label>Upload Workbook <span style="font-weight:400;text-transform:none;letter-spacing:0;font-family:var(--f-body);font-size:11px;color:var(--dim)">— optional, can add later</span></label>
+        </div>
+        <div class="drop-zone" id="ap-dz" onclick="triggerFile('ap-dz')">
+          <div class="dz-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <div class="dz-title">Drop Excel workbook here</div>
+          <div class="dz-sub">Summary/roll-up tab detected automatically · Column names matched by pattern</div>
+          <div class="dz-status" id="ap-dz-status"></div>
+        </div>
+      </div>
+      <div id="ap-map-area"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmAdd()">Add Program</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── EDIT PROGRAM MODAL ── -->
+<div class="overlay" id="modal-edit">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="edit-modal-title">Edit Program</span>
+      <button class="modal-close" onclick="closeModal('modal-edit')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="margin-bottom:14px">
+        <div class="field"><label>Program Name</label><input id="ep-name"></div>
+        <div class="field"><label>Contract / CP Number</label><input id="ep-contract"></div>
+        <div class="field"><label>Customer / Sponsor</label><input id="ep-customer"></div>
+        <div class="field"><label>Period of Performance</label><input id="ep-pop"></div>
+        <div class="field">
+          <label>Contract Type</label>
+          <select id="ep-cttype">
+            <option value="TM">T&amp;M — Time &amp; Materials</option>
+            <option value="CPFF">CPFF — Cost Plus Fixed Fee</option>
+            <option value="CPAF">CPAF — Cost Plus Award Fee</option>
+            <option value="FFP">FFP — Firm Fixed Price</option>
+            <option value="IDIQ">IDIQ — Indefinite Delivery/Quantity</option>
+            <option value="OTHER">Other / Not Specified</option>
+          </select>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div style="margin:12px 0 8px">
+        <div class="field" style="margin-bottom:8px"><label>Upload New Workbook</label></div>
+        <div class="drop-zone" id="ep-dz" style="padding:16px" onclick="triggerFile('ep-dz')">
+          <div class="dz-sub">Drag &amp; drop .xlsx here or click to browse · Replaces current financial data</div>
+          <div class="dz-status" id="ep-dz-status"></div>
+        </div>
+      </div>
+      <div id="ep-map-area"></div>
+      <div id="ep-hist-area"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" onclick="deleteProgram()" style="margin-right:auto">Delete Program</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-edit')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── STOPLIGHT DETAIL MODAL ── -->
+<div class="overlay" id="modal-sl-detail">
+  <div class="modal" style="width:620px">
+    <div class="modal-header">
+      <span class="modal-title" id="sl-detail-title">Category Detail</span>
+      <button class="modal-close" onclick="closeModal('modal-sl-detail')">×</button>
+    </div>
+    <div class="modal-body" id="sl-detail-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-sl-detail')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSlDetail()">Save</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="hidden-file" accept=".xlsx,.xls" style="display:none">
+<div id="toast"></div>
+
+<!-- ── SCRIPTS — load order matters ── -->
+<script src="js/data.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/finance.js"></script>
+<script src="js/render-portfolio.js"></script>
+<script src="js/render-tabs.js"></script>
+<script src="js/render-program.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
