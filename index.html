@@ -31,7 +31,19 @@
 .sl-light{width:14px;height:14px;border-radius:50%;background:var(--slc,var(--dim2));box-shadow:0 0 0 2px white,0 0 0 3px var(--slc,var(--dim2));flex-shrink:0;cursor:pointer;transition:transform .15s}
 .sl-light:hover{transform:scale(1.2)}
 .sl-comment{font-size:11px;color:var(--tx3);line-height:1.4;font-style:italic;min-height:14px;cursor:text}
-.sl-comment[contenteditable="true"]:focus{outline:1px dashed var(--bd2);border-radius:2px;padding:2px 4px;background:var(--s0)}
+.sl-comment[contenteditable="true"]:empty:before {
+  content: attr(data-placeholder);
+  color: var(--dim2);
+  font-style: italic;
+  pointer-events: none;
+}
+.sl-comment[contenteditable="true"]:focus {
+  outline: 1px dashed var(--bd2);
+  border-radius: 2px;
+  padding: 2px 4px;
+  background: var(--s0);
+  color: var(--tx);
+}
 .sl-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
 .sl-drill{font-family:var(--f-mono);font-size:9px;color:var(--blue);opacity:0;transition:opacity .15s;cursor:pointer;user-select:none}
 .sl-card:hover .sl-drill{opacity:1}
