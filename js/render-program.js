@@ -91,15 +91,22 @@ function renderSlCard(pid, key) {
       <span class="sl-name">${cat?.label || key}</span>
       <span class="sl-light" title="Click to cycle color" onclick="cycleSlColor('${pid}','${key}')"></span>
     </div>
-    <div class="sl-comment" contenteditable="true"
-         onblur="saveSlComment('${pid}','${key}',this.innerText)">${escH(d.comment||'')}</div>
+    <div class="sl-comment"
+         contenteditable="true"
+         spellcheck="false"
+         onclick="event.stopPropagation()"
+         onmousedown="event.stopPropagation()"
+         onblur="saveSlComment('${pid}','${key}',this.innerText.trim())"
+         data-placeholder="Add comment…"
+         style="${!d.comment ? 'color:var(--dim2)' : ''}"
+    >${escH(d.comment || '')}</div>
     <div class="sl-footer">
       <div class="sl-controls">
-        <button class="sl-btn sl-btn-g" onclick="setSlColor('${pid}','${key}','green')" title="Green">●</button>
-        <button class="sl-btn sl-btn-a" onclick="setSlColor('${pid}','${key}','amber')" title="Amber">●</button>
-        <button class="sl-btn sl-btn-r" onclick="setSlColor('${pid}','${key}','red')"   title="Red">●</button>
+        <button class="sl-btn sl-btn-g" onclick="event.stopPropagation();setSlColor('${pid}','${key}','green')" title="Green">●</button>
+        <button class="sl-btn sl-btn-a" onclick="event.stopPropagation();setSlColor('${pid}','${key}','amber')" title="Amber">●</button>
+        <button class="sl-btn sl-btn-r" onclick="event.stopPropagation();setSlColor('${pid}','${key}','red')"   title="Red">●</button>
       </div>
-      <span class="sl-drill" ondblclick="openSlDetail('${pid}','${key}')" title="Double-click for detail notes">⊞ Detail</span>
+      <span class="sl-drill" ondblclick="event.stopPropagation();openSlDetail('${pid}','${key}')" title="Double-click for detail notes">⊞ Detail</span>
     </div>
   </div>`;
 }
